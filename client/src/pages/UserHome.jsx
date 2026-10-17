@@ -3,6 +3,15 @@ import api from "../api";
 import UserNavbar from "../components/UserNavbar";
 import PaymentModal from "../components/PaymentModal";
 
+const roomImages = {
+  single:
+    "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=80",
+  double:
+    "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=80",
+  suite:
+    "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=80",
+};
+
 function UserHome() {
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const [rooms, setRooms] = useState([]);
@@ -93,6 +102,17 @@ function UserHome() {
           {rooms.map((room) => (
             <div className="col-md-4 mb-4" key={room._id}>
               <div className="card h-100">
+                <img
+                  src={room.photos?.[0] || roomImages[room.type] || roomImages.double}
+                  className="card-img-top"
+                  alt={`${room.type} room ${room.roomNumber}`}
+                  style={{ height: 220, objectFit: "cover" }}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = roomImages.double;
+                  }}
+                />
                 <div className="card-body">
                   <h5 className="card-title text-capitalize">
                     {room.type} room #{room.roomNumber}
