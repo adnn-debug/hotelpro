@@ -6,7 +6,16 @@ const User = require("../models/User");
 // Public signups always create customer accounts; role escalation is not allowed.
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const body = req.body || {};
+    const name = String(body.name || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    const password = body.password;
+    const phone = String(body.phone || "").trim();
+
+    if (name.length < 2 || name.length > 100) return res.status(400).json({ message: "Name must be between 2 and 100 characters." });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return res.status(400).json({ message: "Enter a valid email address." });
+    if (typeof password !== "string" || password.length < 8 || Buffer.byteLength(password, "utf8") > 72) return res.status(400).json({ message: "Password must be at least 8 characters and no more than 72 UTF-8 bytes." });
+    if (phone.length < 7 || phone.length > 30) return res.status(400).json({ message: "Enter a valid phone number." });
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -19,14 +28,20 @@ exports.signup = async (req, res) => {
 
     res.status(201).json({ message: "Account created successfully" });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    if (err.code === 11000) return res.status(409).json({ message: "Email already registered" });
+    console.error("Signup error:", err.message);
+    res.status(500).json({ message: "Could not create the account right now." });
   }
 };
 
 // Record successful sign-ins and issue a one-day token.
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const body = req.body || {};
+    const emailInput = body.email;
+    const password = body.password;
+    if (typeof emailInput !== "string" || typeof password !== "string") return res.status(400).json({ message: "Email and password are required." });
+    const email = emailInput.trim().toLowerCase();
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
@@ -45,14 +60,6 @@ exports.login = async (req, res) => {
       user.loginHistory = user.loginHistory.slice(-20);
     }
     await user.save();
-
-    const verifiedUser = await User.findById(user._id).select("loginHistory");
-    const recordedCount = verifiedUser?.loginHistory?.length || 0;
-    if (!recordedCount) {
-      console.error("Login history verification failed after successful document save.");
-      return res.status(500).json({ message: "Unable to record login history. Please try again." });
-    }
-    console.info("Login history persisted; recorded entries:", recordedCount);
 
     const token = jwt.sign(
       { id: user._id, type: user.type },

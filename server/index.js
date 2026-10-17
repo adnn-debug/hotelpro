@@ -8,7 +8,11 @@ const Room = require("./models/Room");
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173").split(",").map((origin) => origin.trim()).filter(Boolean);
+app.use(cors({ origin(origin, callback) {
+  if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+  return callback(new Error("Origin is not allowed by CORS"));
+} }));
 app.use(express.json());
 
 // Starter inventory is inserted by room number only when missing.
@@ -31,25 +35,29 @@ const starterRooms = [
   { roomNumber: "305", description: "A generous, comfortable suite designed for an unhurried stay.", photos: ["https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85"], type: "suite", rent: 5000, count: 1 },
 ];
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(async () => {
-    console.log("Connected to MongoDB");
-    const roomNumbers = starterRooms.map((room) => room.roomNumber);
-    const existingRoomNumbers = await Room.distinct("roomNumber", {
-      roomNumber: { $in: roomNumbers },
-    });
-    const existing = new Set(existingRoomNumbers);
-    const missingRooms = starterRooms.filter((room) => !existing.has(room.roomNumber));
+async function start() {
+  if (!process.env.MONGO_URI || !process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error("Set MONGO_URI and a JWT_SECRET of at least 32 characters before starting HotelPro.");
+  }
 
-    if (missingRooms.length > 0) {
-      await Room.insertMany(missingRooms);
-      console.log(`Added ${missingRooms.length} missing starter rooms; inventory now includes the starter set.`);
-    } else {
-      console.log("Starter room inventory is already present");
-    }
-  })
-  .catch((err) => console.error("MongoDB connection or room setup error:", err));
+  await mongoose.connect(process.env.MONGO_URI);
+  console.log("Connected to MongoDB");
+  const roomNumbers = starterRooms.map((room) => room.roomNumber);
+  const existingRoomNumbers = await Room.distinct("roomNumber", {
+    roomNumber: { $in: roomNumbers },
+  });
+  const existing = new Set(existingRoomNumbers);
+  const missingRooms = starterRooms.filter((room) => !existing.has(room.roomNumber));
+
+  if (missingRooms.length > 0) {
+    await Room.insertMany(missingRooms);
+    console.log(`Added ${missingRooms.length} missing starter rooms; inventory now includes the starter set.`);
+  } else {
+    console.log("Starter room inventory is already present");
+  }
+  const PORT = process.env.PORT || 8001;
+  app.listen(PORT, () => console.log(`HotelPro server running on port ${PORT}`));
+}
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/rooms", require("./routes/roomRoutes"));
@@ -59,7 +67,11 @@ app.get("/", (req, res) => {
   res.send("HotelPro server is running");
 });
 
-const PORT = process.env.PORT || 8001;
-app.listen(PORT, () => {
-  console.log(`HotelPro server running on port ${PORT}`);
-});
+if (require.main === module) {
+  start().catch((err) => {
+    console.error("HotelPro startup failed:", err.message);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { app, start };
