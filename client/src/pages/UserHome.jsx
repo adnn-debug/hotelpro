@@ -128,7 +128,7 @@ function UserHome() {
                 />
                 <div className="customer-room-body">
                   <span className="room-type">{room.type} · ROOM {room.roomNumber || String(i + 1).padStart(2, "0")}</span>
-                  <h3>{room.type === "suite" ? "The Suite" : room.type === "double" ? "The Double" : "The Essential"}</h3>
+                  <h3>{room.name || (room.type === "suite" ? "The Suite" : room.type === "double" ? "The Double" : "The Essential")}</h3>
                   <p>{room.description}</p>
                   <div className="customer-room-price">₹{Number(room.rent).toLocaleString("en-IN")} <span>/ night</span></div>
                   <button className="customer-book-button" onClick={() => openPayment(room)}>Choose this room <span aria-hidden="true">↗</span></button>
