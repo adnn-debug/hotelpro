@@ -97,7 +97,7 @@ function Home() {
               </div>
               <div className="room-card-body">
                 <div className="room-type-row"><span className="room-type">{room.type} room</span><span className="room-rating">✦ Comfort pick</span></div>
-                <h3>{room.type === "suite" ? "The Suite" : room.type === "double" ? "The Double" : "The Essential"}</h3>
+                <h3>{room.name || (room.type === "suite" ? "The Suite" : room.type === "double" ? "The Double" : "The Essential")}</h3>
                 <p>{room.description}</p>
                 <div className="room-card-bottom"><div><strong>₹{Number(room.rent).toLocaleString("en-IN")}</strong><span> / night</span></div><Link to="/login" aria-label={`Book ${room.type} room`}>↗</Link></div>
               </div>
