@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const apiBaseURL = import.meta.env.VITE_API_URL || (import.meta.env.PROD
+  ? "https://hotelpro-api-02lk.onrender.com/api"
+  : "http://localhost:8001/api");
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8001/api",
+  baseURL: apiBaseURL,
 });
 
 // Attach the saved authentication token to API requests.
