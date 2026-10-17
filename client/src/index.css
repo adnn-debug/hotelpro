@@ -18,7 +18,6 @@
   --line: #e6e0d5;
   --green: #34483d;
 }
-
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--cream); }
@@ -128,7 +127,6 @@ h1, h2 { font-family: 'Playfair Display', Georgia, serif; }
 .hotel-footer > div a { color: #5c5d55; font-size: 10px; text-decoration: none; }
 .hotel-footer > small { grid-column: 1 / -1; color: #929087; font-size: 9px; }
 
-/* Customer booking area */
 .customer-page { min-height: 100vh; background: #f8f6f1; }
 .customer-top { background: #34483d; color: white; padding: 36px clamp(20px, 6vw, 80px) 30px; }
 .customer-top h1 { color: #fffdf7; font-size: clamp(32px, 4vw, 48px); font-weight: 500; margin: 12px 0 8px; }
@@ -149,9 +147,43 @@ h1, h2 { font-family: 'Playfair Display', Georgia, serif; }
 .customer-room-body p { font-size: 11px; line-height: 1.7; color: #74766d; min-height: 38px; }
 .customer-room-price { font-size: 19px; font-weight: 700; color: #34483d; margin: 14px 0; }
 .customer-room-price span { font-size: 10px; font-weight: 400; color: #7b7b72; }
-.customer-book-button { width: 100%; border: 0; background: #34483d; color: white; padding: 12px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.customer-book-button { width: 100%; border: 0; background: #34483d; color: white; padding: 12px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; }
 .customer-book-button:hover { background: #25382d; }
 .customer-empty { background: #fffefa; border: 1px dashed #d8d1c4; padding: 32px; color: #77786f; font-size: 12px; text-align: center; }
+.customer-nav .hotel-nav-actions { gap: 22px; }
+.customer-nav .button { cursor: pointer; }
+.customer-greeting { color: #8e8c82; }
+
+.auth-page { min-height: 100vh; display: grid; grid-template-columns: minmax(320px, .92fr) 1.08fr; background: #fbfaf6; }
+.auth-visual { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 100vh; padding: 34px clamp(25px, 5vw, 70px); overflow: hidden; background: #283a30; color: #fffdf7; }
+.auth-visual::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(21,31,25,.55), rgba(21,31,25,.28) 35%, rgba(21,31,25,.82)), url('https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1400&q=85') center / cover; }
+.auth-brand, .auth-visual-copy, .auth-visual-caption { position: relative; z-index: 1; }
+.auth-brand { color: white; align-self: flex-start; }
+.auth-brand:hover { color: white; }
+.auth-brand .brand-mark { background: #f6f1e7; color: #34483d; }
+.auth-brand .brand-light { color: #d9c08d; }
+.auth-brand small { color: #e0ded5; }
+.auth-visual-copy { padding: 45px 0; }
+.auth-visual-copy h1 { font-size: clamp(42px, 5vw, 68px); line-height: 1.08; font-weight: 500; letter-spacing: -1.5px; margin: 20px 0; }
+.auth-visual-copy h1 em { color: #d9c08d; font-weight: 500; }
+.auth-visual-copy p { max-width: 330px; color: #e5e5dc; font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-style: italic; line-height: 1.6; }
+.auth-visual-caption { color: #d7d8cf; font-size: 8px; letter-spacing: 1.7px; }
+.auth-form-side { display: flex; flex-direction: column; padding: 30px clamp(24px, 5vw, 80px); }
+.auth-back { align-self: flex-end; color: #77786f; text-decoration: none; font-size: 11px; }
+.auth-back:hover { color: #34483d; }
+.auth-form-wrap { width: 100%; max-width: 440px; margin: auto; padding: 45px 0; }
+.auth-form-wrap h2 { font-size: clamp(34px, 3.3vw, 44px); font-weight: 500; line-height: 1.2; margin: 15px 0 10px; letter-spacing: -1px; }
+.auth-subtitle { color: #77786f; font-size: 12px; line-height: 1.8; margin-bottom: 28px; }
+.auth-form-wrap form label { display: block; font-size: 10px; font-weight: 700; color: #55584f; margin: 16px 0 7px; }
+.auth-input { min-height: 46px; border-radius: 0 !important; border: 1px solid #ded8cc !important; background: #fffefa !important; font-size: 12px !important; padding: 12px 13px !important; box-shadow: none !important; }
+.auth-input:focus { border-color: #8e9c8e !important; }
+.auth-submit { width: 100%; margin-top: 22px; border: 0; min-height: 48px; cursor: pointer; }
+.auth-submit:disabled { opacity: .65; cursor: wait; }
+.auth-switch { color: #77786f; font-size: 11px; text-align: center; margin: 22px 0; }
+.auth-switch a { color: #34483d; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.auth-small-note { border-top: 1px solid #e8e2d7; padding-top: 18px; text-align: center; color: #99958a; font-size: 9px; letter-spacing: .3px; }
+.auth-two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.auth-two-fields label { margin-top: 16px; }
 
 @media (max-width: 900px) {
   .hotel-nav { padding: 0 24px; min-height: 76px; }
@@ -170,6 +202,10 @@ h1, h2 { font-family: 'Playfair Display', Georgia, serif; }
   .experience-image { min-height: 420px; }
   .experience-copy { padding: 60px 28px; }
   .hotel-footer { padding: 28px 24px 20px; }
+  .auth-page { grid-template-columns: .8fr 1.2fr; }
+  .auth-visual { padding: 28px; }
+  .auth-form-side { padding: 25px 28px; }
+  .customer-nav .hotel-nav-actions { gap: 14px; }
 }
 @media (max-width: 560px) {
   .hotel-nav { padding: 0 16px; gap: 10px; }
@@ -205,6 +241,17 @@ h1, h2 { font-family: 'Playfair Display', Georgia, serif; }
   .customer-content { padding: 20px 16px 50px; }
   .customer-room-card img { height: 230px; }
   .customer-section-heading { align-items: flex-start; flex-direction: column; }
+  .auth-page { display: block; }
+  .auth-visual { min-height: 290px; padding: 20px; }
+  .auth-visual-copy { padding: 26px 0 12px; }
+  .auth-visual-copy h1 { font-size: 39px; margin: 12px 0; }
+  .auth-visual-copy p { font-size: 14px; margin-bottom: 0; }
+  .auth-visual-caption { display: none; }
+  .auth-form-side { padding: 20px; }
+  .auth-form-wrap { padding: 30px 0 20px; }
+  .auth-two-fields { grid-template-columns: 1fr; gap: 0; }
+  .customer-nav .hotel-nav-actions { gap: 10px; }
+  .customer-nav .nav-login { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
