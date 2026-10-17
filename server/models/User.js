@@ -1,6 +1,12 @@
 const mongoose = require("mongoose");
 
-// A schema describes what one user looks like in the database
+const loginHistorySchema = new mongoose.Schema(
+  {
+    loggedInAt: { type: Date, required: true, default: Date.now },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -8,6 +14,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     phone: { type: String, required: true },
     type: { type: String, enum: ["admin", "customer"], default: "customer" },
+    loginHistory: { type: [loginHistorySchema], default: [] },
   },
   { timestamps: true }
 );
