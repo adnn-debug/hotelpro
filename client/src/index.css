@@ -288,3 +288,29 @@ h1, h2 { font-family: 'Playfair Display', Georgia, serif; }
   .booking-card-bottom > div { flex-basis: 100%; }
   .booking-dates { gap: 12px; justify-content: space-between; }
 }
+
+.admin-container { max-width: 1380px; margin: 0 auto; padding: 34px clamp(18px, 4vw, 55px) 70px; }
+.admin-heading { padding: 25px 0 30px; }
+.admin-heading h1 { font-size: clamp(30px, 4vw, 46px); font-weight: 500; margin: 13px 0 8px; }
+.admin-heading p { color: #77786f; font-size: 12px; margin: 0; }
+.admin-nav .hotel-nav-actions { gap: 18px; }
+.admin-tabs { display: flex; gap: 7px; flex-wrap: wrap; padding: 0; margin: 0 0 22px; border-bottom: 1px solid #ded8cc; list-style: none; }
+.admin-tabs .nav-item { margin: 0 0 -1px; }
+.admin-tabs .nav-link { border: 1px solid transparent; border-radius: 0; padding: 13px 17px; color: #77786f; font-size: 11px; font-weight: 600; background: transparent; }
+.admin-tabs .nav-link:hover { color: #34483d; border-color: #e8e2d7 #e8e2d7 #ded8cc; }
+.admin-tabs .nav-link.active { background: #fffefa; border-color: #ded8cc #ded8cc #fffefa; color: #34483d; }
+.admin-table-panel { background: #fffefa; border: 1px solid #e8e2d7; padding: 5px 15px; }
+.admin-table-panel .table { margin: 0; font-size: 11px; color: #4d5047; }
+.admin-table-panel .table > :not(caption) > * > * { padding: 14px 12px; border-bottom-color: #eee9e0; background: transparent; }
+.admin-table-panel thead th { color: #858477; font-size: 8px; text-transform: uppercase; letter-spacing: 1.1px; white-space: nowrap; }
+.admin-container form { background: #fffefa; border: 1px solid #e8e2d7; padding: 24px; }
+.admin-container form .form-control, .admin-container form .form-select { border-radius: 0; border-color: #ded8cc; padding: 11px 12px; font-size: 12px; box-shadow: none; }
+.admin-container form .form-control:focus, .admin-container form .form-select:focus { border-color: #8e9c8e; }
+.admin-container form .btn-primary { border: 0; border-radius: 0; background: #34483d; padding: 12px 18px; font-size: 11px; font-weight: 700; }
+@media (max-width: 560px) {
+  .admin-nav .nav-login { display: none; }
+  .admin-container { padding: 24px 15px 50px; }
+  .admin-heading { padding: 20px 0 25px; }
+  .admin-tabs .nav-link { padding: 10px 11px; font-size: 10px; }
+  .admin-container form { padding: 18px; }
+}
