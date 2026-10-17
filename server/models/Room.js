@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 // A schema describes what one room looks like in the database
 const roomSchema = new mongoose.Schema(
   {
-    roomNumber: { type: String, required: true, unique: true },
+    roomNumber: { type: String, required: true, unique: true, trim: true },
+    name: { type: String, trim: true, default: "" },
     description: { type: String, required: true },
     photos: [{ type: String }],
     type: { type: String, enum: ["single", "double", "suite"], required: true },
