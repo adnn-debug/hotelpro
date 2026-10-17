@@ -29,6 +29,8 @@ app.get("/", (req, res) => {
   res.send("HotelPro server is running");
 });
 
-app.listen(8001, () => {
-  console.log("Server running on http://localhost:8001");
+const PORT = process.env.PORT || 8001;
+
+app.listen(PORT, () => {
+  console.log(`HotelPro server running on port ${PORT}`);
 });
