@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import api from "../api";
 import UserNavbar from "../components/UserNavbar";
+import PaymentModal from "../components/PaymentModal";
 
 function UserHome() {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user") || "null");
   const [rooms, setRooms] = useState([]);
   const [fromdate, setFromdate] = useState("");
   const [todate, setTodate] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [message, setMessage] = useState({ text: "", type: "" });
 
-  // Runs once when the page opens: fetch all rooms from the backend
   useEffect(() => {
     api
       .get("/rooms/getrooms")
@@ -17,20 +18,31 @@ function UserHome() {
       .catch(() => setMessage({ text: "Could not load rooms", type: "danger" }));
   }, []);
 
-  const bookRoom = async (roomId) => {
+  const openPayment = (room) => {
     if (!fromdate || !todate) {
       setMessage({ text: "Pick both dates first", type: "warning" });
       return;
     }
+    if (todate <= fromdate) {
+      setMessage({ text: "Check-out must be after check-in", type: "danger" });
+      return;
+    }
+    setMessage({ text: "", type: "" });
+    setSelectedRoom(room);
+  };
+
+  const bookRoom = async () => {
+    if (!selectedRoom) return;
+
     try {
       const res = await api.post("/bookings/book", {
-        roomId,
-        guestName: user.name,
+        roomId: selectedRoom._id,
+        guestName: user?.name,
         fromdate,
         todate,
       });
       setMessage({
-        text: `Booked! Total: Rs ${res.data.booking.totalAmount}`,
+        text: `Payment successful. Booked! Total: Rs ${res.data.booking.totalAmount}`,
         type: "success",
       });
     } catch (err) {
@@ -39,6 +51,7 @@ function UserHome() {
         type: "danger",
       });
     }
+    setSelectedRoom(null);
   };
 
   const today = new Date().toISOString().split("T")[0];
@@ -52,11 +65,23 @@ function UserHome() {
         <div className="row g-2 my-3" style={{ maxWidth: 500 }}>
           <div className="col">
             <label className="form-label">Check-in</label>
-            <input type="date" min={today} className="form-control" value={fromdate} onChange={(e) => setFromdate(e.target.value)} />
+            <input
+              type="date"
+              min={today}
+              className="form-control"
+              value={fromdate}
+              onChange={(e) => setFromdate(e.target.value)}
+            />
           </div>
           <div className="col">
             <label className="form-label">Check-out</label>
-            <input type="date" min={fromdate || today} className="form-control" value={todate} onChange={(e) => setTodate(e.target.value)} />
+            <input
+              type="date"
+              min={fromdate || today}
+              className="form-control"
+              value={todate}
+              onChange={(e) => setTodate(e.target.value)}
+            />
           </div>
         </div>
 
@@ -74,7 +99,10 @@ function UserHome() {
                   </h5>
                   <p className="card-text">{room.description}</p>
                   <p className="fw-bold">Rs {room.rent} / night</p>
-                  <button className="btn btn-primary" onClick={() => bookRoom(room._id)}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => openPayment(room)}
+                  >
                     Book now
                   </button>
                 </div>
@@ -83,6 +111,16 @@ function UserHome() {
           ))}
         </div>
       </div>
+
+      {selectedRoom && (
+        <PaymentModal
+          room={selectedRoom}
+          fromdate={fromdate}
+          todate={todate}
+          onClose={() => setSelectedRoom(null)}
+          onPaid={bookRoom}
+        />
+      )}
     </>
   );
 }
