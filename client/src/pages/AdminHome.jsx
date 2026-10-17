@@ -13,7 +13,9 @@ function AdminHome() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [form, setForm] = useState({
     roomNumber: "",
+    name: "",
     description: "",
+    imageUrl: "",
     type: "single",
     rent: "",
     count: 1,
@@ -44,15 +46,16 @@ function AdminHome() {
     setMessage({ text: "", type: "" });
     try {
       await api.post("/rooms/addroom", {
-        roomNumber: form.roomNumber,
-        description: form.description,
+        roomNumber: form.roomNumber.trim(),
+        name: form.name.trim(),
+        description: form.description.trim(),
         type: form.type,
         rent: Number(form.rent),
         count: Number(form.count),
-        photos: [],
+        photos: form.imageUrl.trim() ? [form.imageUrl.trim()] : [],
       });
       setMessage({ text: "Room added successfully", type: "success" });
-      setForm({ roomNumber: "", description: "", type: "single", rent: "", count: 1 });
+      setForm({ roomNumber: "", name: "", description: "", imageUrl: "", type: "single", rent: "", count: 1 });
       loadAll(); // refresh so the new room shows in All Rooms
     } catch (err) {
       setMessage({
@@ -146,6 +149,7 @@ function AdminHome() {
               <thead>
                 <tr>
                   <th>Number</th>
+                  <th>Name</th>
                   <th>Type</th>
                   <th>Description</th>
                   <th>Rent</th>
@@ -156,6 +160,7 @@ function AdminHome() {
                 {rooms.map((r) => (
                   <tr key={r._id}>
                     <td>{r.roomNumber}</td>
+                    <td>{r.name || "—"}</td>
                     <td className="text-capitalize">{r.type}</td>
                     <td>{r.description}</td>
                     <td>Rs {r.rent}</td>
@@ -173,16 +178,27 @@ function AdminHome() {
               <div className={`alert alert-${message.type}`}>{message.text}</div>
             )}
             <form onSubmit={addRoom}>
-              <input className="form-control mb-3" name="roomNumber" placeholder="Room number" value={form.roomNumber} onChange={handleChange} required />
-              <input className="form-control mb-3" name="description" placeholder="Description" value={form.description} onChange={handleChange} required />
-              <select className="form-select mb-3" name="type" value={form.type} onChange={handleChange}>
+              <h2 style={{ fontSize: 26, marginBottom: 8 }}>Add a room</h2>
+              <p style={{ color: "#77786f", fontSize: 12, lineHeight: 1.7 }}>Create a room listing. Guests will see its name, description, nightly price and photo.</p>
+              <label htmlFor="room-number">Room number / unique ID</label>
+              <input id="room-number" className="form-control mb-3" name="roomNumber" placeholder="e.g. 401" value={form.roomNumber} onChange={handleChange} required maxLength={30} />
+              <label htmlFor="room-name">Display name</label>
+              <input id="room-name" className="form-control mb-3" name="name" placeholder="e.g. Garden View Deluxe" value={form.name} onChange={handleChange} maxLength={80} />
+              <label htmlFor="room-description">Description</label>
+              <textarea id="room-description" className="form-control mb-3" name="description" placeholder="Describe the room, bed setup, amenities and what makes it special..." value={form.description} onChange={handleChange} required rows={4} maxLength={1200} />
+              <label htmlFor="room-photo">Photo URL (optional)</label>
+              <input id="room-photo" className="form-control mb-3" name="imageUrl" type="url" placeholder="https://example.com/room-photo.jpg" value={form.imageUrl} onChange={handleChange} />
+              <label htmlFor="room-type-admin">Room type</label>
+              <select id="room-type-admin" className="form-select mb-3" name="type" value={form.type} onChange={handleChange}>
                 <option value="single">Single</option>
                 <option value="double">Double</option>
                 <option value="suite">Suite</option>
               </select>
-              <input className="form-control mb-3" name="rent" type="number" min="1" placeholder="Rent per night" value={form.rent} onChange={handleChange} required />
-              <input className="form-control mb-3" name="count" type="number" min="1" placeholder="Number of rooms of this kind" value={form.count} onChange={handleChange} required />
-              <button className="btn btn-primary" type="submit">Add room</button>
+              <label htmlFor="room-rent">Nightly price (₹)</label>
+              <input id="room-rent" className="form-control mb-3" name="rent" type="number" min="1" step="1" placeholder="Rent per night" value={form.rent} onChange={handleChange} required />
+              <label htmlFor="room-count">Number of available units</label>
+              <input id="room-count" className="form-control mb-3" name="count" type="number" min="1" step="1" placeholder="e.g. 1" value={form.count} onChange={handleChange} required />
+              <button className="btn btn-primary" type="submit">Save room listing</button>
             </form>
           </div>
         )}
