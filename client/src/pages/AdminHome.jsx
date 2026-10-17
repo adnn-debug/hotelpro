@@ -71,18 +71,21 @@ function AdminHome() {
 
   return (
     <>
-      <nav className="navbar navbar-dark bg-dark px-3">
-        <span className="navbar-brand">HotelPro Admin</span>
-        <div className="d-flex align-items-center gap-3">
-          <span className="text-white-50">Hi, {user.name}</span>
-          <button className="btn btn-sm btn-outline-light" onClick={logout}>
-            Logout
-          </button>
+      <nav className="hotel-nav admin-nav">
+        <span className="hotel-brand"><span className="brand-mark">H</span><span>hotel<span className="brand-light">pro</span><small>ADMIN CONSOLE</small></span></span>
+        <div className="hotel-nav-actions">
+          <span className="nav-login">Signed in as {user?.name || "Admin"}</span>
+          <button className="button button-dark" onClick={logout}>Log out <span>↗</span></button>
         </div>
       </nav>
 
-      <div className="container mt-4">
-        <ul className="nav nav-tabs mb-4">
+      <div className="admin-container">
+        <header className="admin-heading">
+          <span className="eyebrow"><span className="eyebrow-line" /> HOTEL MANAGEMENT</span>
+          <h1>Good operations make great stays.</h1>
+          <p>Review reservations, manage room inventory and keep your guest information organised.</p>
+        </header>
+        <ul className="admin-tabs">
           {tabs.map((t) => (
             <li className="nav-item" key={t.key}>
               <button
@@ -96,7 +99,7 @@ function AdminHome() {
         </ul>
 
         {tab === "bookings" && (
-          <div className="table-responsive">
+          <div className="table-responsive admin-table-panel">
             <table className="table table-striped align-middle">
               <thead>
                 <tr>
@@ -138,7 +141,7 @@ function AdminHome() {
         )}
 
         {tab === "rooms" && (
-          <div className="table-responsive">
+          <div className="table-responsive admin-table-panel">
             <table className="table table-striped">
               <thead>
                 <tr>
@@ -185,7 +188,7 @@ function AdminHome() {
         )}
 
         {tab === "users" && (
-          <div className="table-responsive">
+          <div className="table-responsive admin-table-panel">
             <table className="table table-striped">
               <thead>
                 <tr>
