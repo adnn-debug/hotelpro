@@ -10,6 +10,7 @@ const roomSchema = new mongoose.Schema(
     type: { type: String, enum: ["single", "double", "suite"], required: true },
     rent: { type: Number, required: true },
     count: { type: Number, default: 1 },
+    bookingVersion: { type: Number, default: 0, select: false },
     currentBookings: [
       {
         bookingId: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },

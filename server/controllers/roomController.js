@@ -57,7 +57,8 @@ exports.addRoom = async (req, res) => {
 // GET ALL ROOMS: return every room in the database.
 exports.getRooms = async (req, res) => {
   try {
-    const rooms = await Room.find().sort({ createdAt: -1 });
+    // Never expose internal reservation records or guest IDs from room documents.
+    const rooms = await Room.find().select("roomNumber name description photos type rent count createdAt").sort({ createdAt: -1 });
     res.json(rooms);
   } catch (err) {
     console.error("Get rooms error:", err);

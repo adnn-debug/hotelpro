@@ -1,62 +1,82 @@
 const Booking = require("../models/Booking");
 const Room = require("../models/Room");
+const User = require("../models/User");
+const mongoose = require("mongoose");
+
+function parseDateOnly(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : null;
+}
+exports.parseDateOnly = parseDateOnly;
 
 // BOOK A ROOM: a logged-in user books a room for a date range
 exports.createBooking = async (req, res) => {
   try {
-    const { roomId, guestName, fromdate, todate } = req.body;
+    const { roomId } = req.body;
+    const from = parseDateOnly(req.body.fromdate);
+    const to = parseDateOnly(req.body.todate);
+    if (!roomId || !from || !to || to <= from) return res.status(400).json({ message: "Choose valid check-in and check-out dates." });
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (from < today) return res.status(400).json({ message: "Check-in cannot be in the past." });
+    const totaldays = (to - from) / 86400000;
+    if (totaldays > 365) return res.status(400).json({ message: "A stay cannot exceed 365 nights." });
 
-    const from = new Date(fromdate);
-    const to = new Date(todate);
+    if (!mongoose.Types.ObjectId.isValid(roomId)) return res.status(400).json({ message: "Invalid room ID." });
+    const guest = await User.findById(req.user.id).select("name");
+    if (!guest) return res.status(401).json({ message: "Account not found. Please sign in again." });
 
-    // The check-out date must be after the check-in date
-    if (isNaN(from) || isNaN(to) || to <= from) {
-      return res.status(400).json({ message: "Invalid dates" });
+    const session = await mongoose.startSession();
+    let booking;
+    let missingRoom = false;
+    let unavailable = false;
+    try {
+      // The shared room write serializes concurrent reservations for the same inventory.
+      // The transaction requires MongoDB replica-set support (including Atlas).
+      await session.withTransaction(async () => {
+        booking = undefined;
+        missingRoom = false;
+        unavailable = false;
+        const room = await Room.findById(roomId).session(session);
+        if (!room) { missingRoom = true; return; }
+        const overlapping = await Booking.countDocuments({
+          room: roomId,
+          status: "booked",
+          fromdate: { $lt: to },
+          todate: { $gt: from },
+        }).session(session);
+        if (overlapping >= room.count) { unavailable = true; return; }
+        await Room.updateOne({ _id: roomId }, { $inc: { bookingVersion: 1 } }, { session });
+        booking = new Booking({
+          room: roomId,
+          user: req.user.id,
+          guestName: guest.name,
+          fromdate: from,
+          todate: to,
+          totaldays,
+          totalAmount: totaldays * room.rent,
+          paymentStatus: "not_configured",
+        });
+        await booking.save({ session });
+      });
+    } finally {
+      await session.endSession();
     }
-
-    const room = await Room.findById(roomId);
-    if (!room) {
-      return res.status(404).json({ message: "Room not found" });
-    }
-
-    // Count active bookings of this room that overlap the requested dates
-    const overlapping = await Booking.countDocuments({
-      room: roomId,
-      status: "booked",
-      fromdate: { $lt: to },
-      todate: { $gt: from },
-    });
-
-    // If every unit of this room is already taken, reject
-    if (overlapping >= room.count) {
-      return res.status(400).json({ message: "Room not available for these dates" });
-    }
-
-    // Work out the number of nights and the price
-    const totaldays = Math.ceil((to - from) / (1000 * 60 * 60 * 24));
-    const totalAmount = totaldays * room.rent;
-
-    const booking = new Booking({
-      room: roomId,
-      user: req.user.id, // comes from the token, so users can't book as someone else
-      guestName,
-      fromdate: from,
-      todate: to,
-      totaldays,
-      totalAmount,
-    });
-    await booking.save();
+    if (missingRoom) return res.status(404).json({ message: "Room not found" });
+    if (unavailable) return res.status(409).json({ message: "Room not available for these dates" });
 
     res.status(201).json({ message: "Room booked successfully", booking });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Create booking error:", err.message);
+    res.status(500).json({ message: "Could not create the booking right now." });
   }
 };
 
 // MY BOOKINGS: all bookings of the logged-in user
 exports.getMyBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find({ user: req.user.id }).populate("room");
+    const bookings = await Booking.find({ user: req.user.id }).populate("room", "roomNumber name description photos type rent count");
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
@@ -67,6 +87,9 @@ exports.getMyBookings = async (req, res) => {
 exports.cancelBooking = async (req, res) => {
   try {
     const { bookingId } = req.body;
+    if (typeof bookingId !== "string" || !/^[a-f\d]{24}$/i.test(bookingId)) {
+      return res.status(400).json({ message: "Invalid booking ID." });
+    }
 
     const booking = await Booking.findById(bookingId);
     if (!booking) {

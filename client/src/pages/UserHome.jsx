@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import UserNavbar from "../components/UserNavbar";
-import PaymentModal from "../components/PaymentModal";
+import BookingModal from "../components/PaymentModal";
 
 const roomImages = {
   single: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1000&q=85",
@@ -42,7 +42,7 @@ function UserHome() {
     [rooms, roomType]
   );
 
-  const openPayment = (room) => {
+  const openBooking = (room) => {
     if (!fromdate || !todate) {
       setMessage({ text: "Choose your check-in and check-out dates first.", type: "warning" });
       return;
@@ -77,7 +77,7 @@ function UserHome() {
     setSelectedRoom(null);
   };
 
-  const today = new Date().toISOString().split("T")[0];
+  const [today] = useState(() => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
 
   return (
     <main className="customer-page">
@@ -112,7 +112,7 @@ function UserHome() {
         {message.text && <div className={`alert alert-${message.type} mt-3`} role="status">{message.text}</div>}
 
         <section className="customer-section-heading">
-          <div><h2>Available rooms</h2><p>{visibleRooms.length} {visibleRooms.length === 1 ? "option" : "options"} to explore · Prices shown per night</p></div>
+          <div><h2>Explore rooms</h2><p>{visibleRooms.length} {visibleRooms.length === 1 ? "option" : "options"} to explore · Prices shown per night · Availability is confirmed when you book</p></div>
           <span className="eyebrow">COMFORT, CONSIDERED</span>
         </section>
 
@@ -131,7 +131,7 @@ function UserHome() {
                   <h3>{room.name || (room.type === "suite" ? "The Suite" : room.type === "double" ? "The Double" : "The Essential")}</h3>
                   <p>{room.description}</p>
                   <div className="customer-room-price">₹{Number(room.rent).toLocaleString("en-IN")} <span>/ night</span></div>
-                  <button className="customer-book-button" onClick={() => openPayment(room)}>Choose this room <span aria-hidden="true">↗</span></button>
+              <button className="customer-book-button" onClick={() => openBooking(room)}>Choose this room <span aria-hidden="true">↗</span></button>
                 </div>
               </article>
             ))}
@@ -148,12 +148,12 @@ function UserHome() {
       </div>
 
       {selectedRoom && (
-        <PaymentModal
+        <BookingModal
           room={selectedRoom}
           fromdate={fromdate}
           todate={todate}
           onClose={() => setSelectedRoom(null)}
-          onPaid={bookRoom}
+          onConfirm={bookRoom}
         />
       )}
     </main>

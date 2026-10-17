@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api";
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 const quotes = [
   { line: "Where every stay becomes a story.", author: "The art of getting away", style: "serif" },
   { line: "Arrive as a guest. Leave with memories.", author: "A little more than a room", style: "italic" },
@@ -129,7 +131,7 @@ function Home() {
         <Link className="hotel-brand footer-brand" to="/"><span className="brand-mark">H</span><span>hotel<span className="brand-light">pro</span><small>STAYS, MADE SPECIAL</small></span></Link>
         <p>Make room for a better stay.</p>
         <div><Link to="/login">Sign in</Link><Link to="/signup">Create account</Link><a href="#rooms">Explore rooms</a></div>
-        <small>© {new Date().getFullYear()} HotelPro. Made for the way you travel.</small>
+        <small>© {CURRENT_YEAR} HotelPro. Made for the way you travel.</small>
       </footer>
     </main>
   );

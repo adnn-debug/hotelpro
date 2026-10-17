@@ -11,6 +11,7 @@ const bookingSchema = new mongoose.Schema(
     totaldays: { type: Number, required: true },
     totalAmount: { type: Number, required: true },
     status: { type: String, enum: ["booked", "cancelled"], default: "booked" },
+    paymentStatus: { type: String, enum: ["not_configured", "pending", "paid", "failed", "refunded"], default: "not_configured" },
   },
   { timestamps: true }
 );
