@@ -1,6 +1,6 @@
 # HotelPro
 
-HotelPro is a rich, image-led hotel booking demo with guest registration, room browsing, reservations, and an admin console. The selected version is the `main` branch; `classic` is retained as a separate fallback branch.
+HotelPro is a rich, image-led hotel booking demo with guest registration, room browsing, reservations, and an admin console. The selected version is the `main` branch. The former `classic` branch has been deleted.
 
 ## Run locally
 
