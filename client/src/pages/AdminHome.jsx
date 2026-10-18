@@ -41,6 +41,25 @@ function AdminHome() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const removeRoom = async (room) => {
+    const confirmed = window.confirm(
+      "Remove room " + room.roomNumber + " from HotelPro? Rooms with booking history cannot be deleted."
+    );
+    if (!confirmed) return;
+
+    setMessage({ text: "", type: "" });
+    try {
+      await api.delete("/rooms/" + room._id);
+      setMessage({ text: "Room " + room.roomNumber + " removed successfully.", type: "success" });
+      loadAll();
+    } catch (err) {
+      setMessage({
+        text: err.response?.data?.message || "Could not remove this room. Please try again.",
+        type: "danger",
+      });
+    }
+  };
+
   const addRoom = async (e) => {
     e.preventDefault();
     setMessage({ text: "", type: "" });
@@ -127,31 +146,59 @@ function AdminHome() {
                     <td className="text-capitalize">
                       {b.room?.type} #{b.room?.roomNumber}
                     </td>
-                    <td>{new Date(b.fromdate).toLocaleDateString()}</td>
-                    <td>{new Date(b.todate).toLocaleDateString()}</td>
-                    <td>Rs {b.totalAmount}</td>
-                    <td>
-                      <span className={`badge ${b.status === "booked" ? "bg-success" : "bg-secondary"}`}>
-                        {b.status}
-                      </span>
-                    </td>
+                {tab === "rooms" && (
+          <>
+            {message.text && (
+              <div className={`alert alert-${message.type}`} role="status">{message.text}</div>
+            )}
+            <div className="table-responsive admin-table-panel">
+              <table className="table table-striped align-middle">
+                <thead>
+                  <tr>
+                    <th>Number</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Rent / night</th>
+                    <th>Units</th>
+                    <th>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {bookings.length === 0 && <p className="text-muted">No bookings yet.</p>}
-          </div>
-        )}
-
-        {tab === "rooms" && (
-          <div className="table-responsive admin-table-panel">
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th>Number</th>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Description</th>
+                </thead>
+                <tbody>
+                  {rooms.map((r) => {
+                    const hasBookingHistory = bookings.some((b) => {
+                      const bookedRoomId = typeof b.room === "object" ? b.room?._id : b.room;
+                      return bookedRoomId && String(bookedRoomId) === String(r._id);
+                    });
+                    return (
+                      <tr key={r._id}>
+                        <td>{r.roomNumber}</td>
+                        <td>{r.name || "—"}</td>
+                        <td className="text-capitalize">{r.type}</td>
+                        <td>{r.description}</td>
+                        <td>₹{Number(r.rent).toLocaleString("en-IN")}</td>
+                        <td>{r.count}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => removeRoom(r)}
+                            disabled={hasBookingHistory}
+                            title={hasBookingHistory ? "Room has booking history and is protected" : "Remove this room"}
+                          >
+                            {hasBookingHistory ? "Protected" : "Remove"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {rooms.length === 0 && <p className="text-muted">No rooms in inventory yet. Use “Add Room” to create one.</p>}
+              <p className="text-muted small mt-2">Rooms with booking history are protected so past reservations remain intact.</p>
+            </div>
+          </>
+        )}ption</th>
                   <th>Rent</th>
                   <th>Units</th>
                 </tr>
