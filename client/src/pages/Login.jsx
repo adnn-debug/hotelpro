@@ -46,7 +46,7 @@ function Login({ adminOnly = false }) {
           {error && <div className="alert alert-danger" role="alert">{error}</div>}
           <form onSubmit={handleSubmit}>
             <label htmlFor="login-email">Email address</label>
-            <input id="login-email" className="form-control auth-input" name="email" type="email" autoComplete="email" placeholder="you@example.com" value={form.email} onChange={handleChange} readOnly={adminOnly} required />
+            <input id="login-email" className="form-control auth-input" name="email" type="email" autoComplete="email" placeholder="you@example.com" value={form.email} onChange={handleChange} required />
             <label htmlFor="login-password">Password</label>
             <input id="login-password" className="form-control auth-input" name="password" type="password" autoComplete="current-password" placeholder="Enter your password" value={form.password} onChange={handleChange} required />
             <button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? "Signing in…" : adminOnly ? "Sign in to admin" : "Sign in to HotelPro"} <span>↗</span></button>
