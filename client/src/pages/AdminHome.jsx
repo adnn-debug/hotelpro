@@ -6,7 +6,7 @@ function AdminHome() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const [tab, setTab] = useState("bookings"); // which tab is open
+  const [tab, setTab] = useState("bookings");
   const [bookings, setBookings] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [users, setUsers] = useState([]);
@@ -21,7 +21,6 @@ function AdminHome() {
     count: 1,
   });
 
-  // Fetch bookings, rooms and users from the backend
   const loadAll = () => {
     api.get("/bookings/all").then((r) => setBookings(r.data)).catch(() => {});
     api.get("/rooms/getrooms").then((r) => setRooms(r.data)).catch(() => {});
@@ -75,7 +74,7 @@ function AdminHome() {
       });
       setMessage({ text: "Room added successfully", type: "success" });
       setForm({ roomNumber: "", name: "", description: "", imageUrl: "", type: "single", rent: "", count: 1 });
-      loadAll(); // refresh so the new room shows in All Rooms
+      loadAll();
     } catch (err) {
       setMessage({
         text: err.response?.data?.message || "Something went wrong",
@@ -111,7 +110,7 @@ function AdminHome() {
           {tabs.map((t) => (
             <li className="nav-item" key={t.key}>
               <button
-                className={`nav-link ${tab === t.key ? "active" : ""}`}
+                className={"nav-link " + (tab === t.key ? "active" : "")}
                 onClick={() => setTab(t.key)}
               >
                 {t.label}
@@ -146,10 +145,26 @@ function AdminHome() {
                     <td className="text-capitalize">
                       {b.room?.type} #{b.room?.roomNumber}
                     </td>
-                {tab === "rooms" && (
+                    <td>{new Date(b.fromdate).toLocaleDateString()}</td>
+                    <td>{new Date(b.todate).toLocaleDateString()}</td>
+                    <td>Rs {b.totalAmount}</td>
+                    <td>
+                      <span className={"badge " + (b.status === "booked" ? "bg-success" : "bg-secondary")}>
+                        {b.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {bookings.length === 0 && <p className="text-muted">No bookings yet.</p>}
+          </div>
+        )}
+
+        {tab === "rooms" && (
           <>
             {message.text && (
-              <div className={`alert alert-${message.type}`} role="status">{message.text}</div>
+              <div className={"alert alert-" + message.type} role="status">{message.text}</div>
             )}
             <div className="table-responsive admin-table-panel">
               <table className="table table-striped align-middle">
@@ -198,31 +213,12 @@ function AdminHome() {
               <p className="text-muted small mt-2">Rooms with booking history are protected so past reservations remain intact.</p>
             </div>
           </>
-        )}ption</th>
-                  <th>Rent</th>
-                  <th>Units</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rooms.map((r) => (
-                  <tr key={r._id}>
-                    <td>{r.roomNumber}</td>
-                    <td>{r.name || "—"}</td>
-                    <td className="text-capitalize">{r.type}</td>
-                    <td>{r.description}</td>
-                    <td>Rs {r.rent}</td>
-                    <td>{r.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         )}
 
         {tab === "add" && (
           <div style={{ maxWidth: 480 }}>
             {message.text && (
-              <div className={`alert alert-${message.type}`}>{message.text}</div>
+              <div className={"alert alert-" + message.type}>{message.text}</div>
             )}
             <form onSubmit={addRoom}>
               <h2 style={{ fontSize: 26, marginBottom: 8 }}>Add a room</h2>
