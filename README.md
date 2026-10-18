@@ -10,7 +10,7 @@ HotelPro is a rich, image-led hotel booking demo with guest registration, room b
 4. In `server`, run `npm ci` then `npm start`.
 5. In `client`, run `npm ci`, set `VITE_API_URL=http://localhost:8001/api` in a local `.env`, then run `npm run dev`.
 
-The server adds the starter inventory only when those room numbers are missing. Public registration always creates a customer account. To designate an administrator, first register that account, then change its `type` field to `admin` directly in the trusted MongoDB database; there is intentionally no public role-selection or admin-creation endpoint.
+The server adds the starter inventory only when those room numbers are missing. Public registration always creates customer accounts and cannot assign admin privileges. To enable the dedicated admin sign-in, set `ADMIN_EMAIL=admin@gmail.com` and `ADMIN_PASSWORD_HASH` in the backend environment. Generate the hash locally with the installed `bcryptjs` package at cost 12 (for example, `node -e "console.log(require('./server/node_modules/bcryptjs').hashSync('YOUR_STRONG_PASSWORD', 12))"`), then store only the resulting hash in the backend environment. Do not use a weak example password or commit a plaintext password or hash. On startup, the backend creates or updates that configured account as an administrator. Admin sign-in is available at `/admin-login`; admin API access remains enforced by signed backend tokens and admin-only middleware.
 
 ## Payments
 
