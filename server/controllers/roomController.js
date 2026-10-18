@@ -60,7 +60,7 @@ exports.addRoom = async (req, res) => {
 exports.getRooms = async (req, res) => {
   try {
     // Never expose internal reservation records or guest IDs from room documents.
-    const rooms = await Room.find().select("roomNumber name description photos type rent count createdAt").sort({ createdAt: -1 });
+    const rooms = await Room.find({ isActive: { $ne: false } }).select("roomNumber name description photos type rent count createdAt").sort({ createdAt: -1 });
     res.json(rooms);
   } catch (err) {
     console.error("Get rooms error:", err);
@@ -69,7 +69,8 @@ exports.getRooms = async (req, res) => {
 };
 
 
-// REMOVE ROOM: delete inventory atomically only when no booking history references it.
+// REMOVE ROOM: archive inventory rather than hard-delete it, preserving references
+// and preventing the starter inventory seeder from recreating removed rooms.
 exports.removeRoom = async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) {
@@ -82,7 +83,9 @@ exports.removeRoom = async (req, res) => {
   try {
     await session.withTransaction(async () => {
       outcome = "not-found";
-      const room = await Room.findById(id).select("_id roomNumber").session(session);
+      const room = await Room.findOne({ _id: id, isActive: { $ne: false } })
+        .select("_id roomNumber")
+        .session(session);
       if (!room) return;
 
       const booking = await Booking.findOne({ room: room._id }).select("_id").session(session);
@@ -91,10 +94,14 @@ exports.removeRoom = async (req, res) => {
         return;
       }
 
-      const deletion = await Room.deleteOne({ _id: room._id }, { session });
-      if (deletion.deletedCount === 1) {
+      const update = await Room.updateOne(
+        { _id: room._id, isActive: { $ne: false } },
+        { $set: { isActive: false } },
+        { session }
+      );
+      if (update.modifiedCount === 1) {
         roomNumber = room.roomNumber;
-        outcome = "deleted";
+        outcome = "removed";
       }
     });
   } catch (err) {
@@ -109,7 +116,7 @@ exports.removeRoom = async (req, res) => {
   }
   if (outcome === "has-bookings") {
     return res.status(409).json({
-      message: "This room has booking history and cannot be deleted. Keep it to preserve reservation records.",
+      message: "This room has booking history and cannot be removed. Keep it to preserve reservation records.",
     });
   }
   return res.json({ message: "Room " + roomNumber + " removed successfully." });
