@@ -1,4 +1,6 @@
 const Room = require("../models/Room");
+const Booking = require("../models/Booking");
+const mongoose = require("mongoose");
 
 // ADD ROOM: validate admin input and persist the room in MongoDB.
 exports.addRoom = async (req, res) => {
@@ -63,5 +65,35 @@ exports.getRooms = async (req, res) => {
   } catch (err) {
     console.error("Get rooms error:", err);
     res.status(500).json({ message: "Could not load rooms right now." });
+  }
+};
+
+
+// REMOVE ROOM: preserve historical reservation records by blocking deletion
+// whenever any booking document references this room.
+exports.removeRoom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid room identifier." });
+    }
+
+    const room = await Room.findById(id).select("_id roomNumber");
+    if (!room) {
+      return res.status(404).json({ message: "Room not found. It may already have been removed." });
+    }
+
+    const hasBookingHistory = await Booking.exists({ room: room._id });
+    if (hasBookingHistory) {
+      return res.status(409).json({
+        message: "This room has booking history and cannot be deleted. Keep it to preserve reservation records.",
+      });
+    }
+
+    await Room.deleteOne({ _id: room._id });
+    return res.json({ message: "Room " + room.roomNumber + " removed successfully." });
+  } catch (err) {
+    console.error("Remove room error:", err);
+    return res.status(500).json({ message: "Could not remove this room right now. Please try again." });
   }
 };
