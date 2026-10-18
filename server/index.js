@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const Room = require("./models/Room");
+const User = require("./models/User");
 
 const app = express();
 
@@ -42,6 +43,25 @@ async function start() {
 
   await mongoose.connect(process.env.MONGO_URI);
   console.log("Connected to MongoDB");
+
+  // Provision the configured admin account without storing a plaintext password.
+  // If admin credentials are not configured, existing customer operations remain available.
+  if (process.env.ADMIN_PASSWORD_HASH) {
+    const adminHash = process.env.ADMIN_PASSWORD_HASH;
+    if (!/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(adminHash)) {
+      throw new Error("ADMIN_PASSWORD_HASH must be a valid bcrypt hash.");
+    }
+    const adminEmail = String(process.env.ADMIN_EMAIL || "admin@gmail.com").trim().toLowerCase();
+    await User.findOneAndUpdate(
+      { email: adminEmail },
+      {
+        $set: { password: adminHash, type: "admin" },
+        $setOnInsert: { name: "HotelPro Admin", phone: "0000000" },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
+    );
+    console.log("Configured HotelPro administrator account");
+  }
   const roomNumbers = starterRooms.map((room) => room.roomNumber);
   const existingRoomNumbers = await Room.distinct("roomNumber", {
     roomNumber: { $in: roomNumbers },
