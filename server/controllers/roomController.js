@@ -69,31 +69,48 @@ exports.getRooms = async (req, res) => {
 };
 
 
-// REMOVE ROOM: preserve historical reservation records by blocking deletion
-// whenever any booking document references this room.
+// REMOVE ROOM: delete inventory atomically only when no booking history references it.
 exports.removeRoom = async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid room identifier." });
+  }
+
+  let outcome = "not-found";
+  let roomNumber = "";
+  const session = await mongoose.startSession();
   try {
-    const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "Invalid room identifier." });
-    }
+    await session.withTransaction(async () => {
+      outcome = "not-found";
+      const room = await Room.findById(id).select("_id roomNumber").session(session);
+      if (!room) return;
 
-    const room = await Room.findById(id).select("_id roomNumber");
-    if (!room) {
-      return res.status(404).json({ message: "Room not found. It may already have been removed." });
-    }
+      const booking = await Booking.findOne({ room: room._id }).select("_id").session(session);
+      if (booking) {
+        outcome = "has-bookings";
+        return;
+      }
 
-    const hasBookingHistory = await Booking.exists({ room: room._id });
-    if (hasBookingHistory) {
-      return res.status(409).json({
-        message: "This room has booking history and cannot be deleted. Keep it to preserve reservation records.",
-      });
-    }
-
-    await Room.deleteOne({ _id: room._id });
-    return res.json({ message: "Room " + room.roomNumber + " removed successfully." });
+      const deletion = await Room.deleteOne({ _id: room._id }, { session });
+      if (deletion.deletedCount === 1) {
+        roomNumber = room.roomNumber;
+        outcome = "deleted";
+      }
+    });
   } catch (err) {
     console.error("Remove room error:", err);
     return res.status(500).json({ message: "Could not remove this room right now. Please try again." });
+  } finally {
+    await session.endSession();
   }
+
+  if (outcome === "not-found") {
+    return res.status(404).json({ message: "Room not found. It may already have been removed." });
+  }
+  if (outcome === "has-bookings") {
+    return res.status(409).json({
+      message: "This room has booking history and cannot be deleted. Keep it to preserve reservation records.",
+    });
+  }
+  return res.json({ message: "Room " + roomNumber + " removed successfully." });
 };
