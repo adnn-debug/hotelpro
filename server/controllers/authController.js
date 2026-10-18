@@ -77,6 +77,45 @@ exports.login = async (req, res) => {
   }
 };
 
+// The dedicated admin sign-in accepts only the configured account and compares a bcrypt hash.
+exports.adminLogin = async (req, res) => {
+  try {
+    const configuredEmail = String(process.env.ADMIN_EMAIL || "admin@gmail.com").trim().toLowerCase();
+    const passwordHash = process.env.ADMIN_PASSWORD_HASH;
+    const { email: emailInput, password } = req.body || {};
+
+    if (!passwordHash || !/^\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}$/.test(passwordHash)) {
+      return res.status(503).json({ message: "Admin sign-in is not configured on this server." });
+    }
+    if (typeof emailInput !== "string" || typeof password !== "string") {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
+
+    const email = emailInput.trim().toLowerCase();
+    if (email !== configuredEmail || !(await bcrypt.compare(password, passwordHash))) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    const user = await User.findOne({ email, type: "admin" });
+    if (!user) {
+      return res.status(503).json({ message: "Admin account is not ready. Please try again shortly." });
+    }
+
+    user.loginHistory.push({ loggedInAt: new Date() });
+    if (user.loginHistory.length > 20) user.loginHistory = user.loginHistory.slice(-20);
+    await user.save();
+
+    const token = jwt.sign({ id: user._id, type: "admin" }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    return res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, type: "admin" },
+    });
+  } catch (err) {
+    console.error("Admin login failed:", err.message);
+    return res.status(500).json({ message: "Could not sign in right now." });
+  }
+};
+
 // Admin only: list users without password hashes.
 exports.getUsers = async (req, res) => {
   try {
