@@ -84,7 +84,7 @@ exports.adminLogin = async (req, res) => {
     const passwordHash = process.env.ADMIN_PASSWORD_HASH;
     const { email: emailInput, password } = req.body || {};
 
-    if (!passwordHash || !/^\$2[aby]\$\\d{2}\$[./A-Za-z0-9]{53}$/.test(passwordHash)) {
+    if (!passwordHash || !/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(passwordHash)) {
       return res.status(503).json({ message: "Admin sign-in is not configured on this server." });
     }
     if (typeof emailInput !== "string" || typeof password !== "string") {
