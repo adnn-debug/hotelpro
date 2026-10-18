@@ -39,7 +39,7 @@ exports.createBooking = async (req, res) => {
         missingRoom = false;
         unavailable = false;
         const room = await Room.findById(roomId).session(session);
-        if (!room) { missingRoom = true; return; }
+        if (!room || room.isActive === false) { missingRoom = true; return; }
         const overlapping = await Booking.countDocuments({
           room: roomId,
           status: "booked",
